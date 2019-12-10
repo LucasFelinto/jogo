@@ -20,6 +20,7 @@ app.get('/', function (req, res) {
 
 io.on('connection', function (socket) {
   players[socket.id] = {
+    color: Math.random() * 360,
     x: 0,
     y: 0
   }
@@ -29,23 +30,33 @@ io.on('connection', function (socket) {
   // socket.on('my other event', function (data) {
     // console.log(data);
   // });
+  console.log(socket.connected, socket.id)
+
+  socket.on("disconnect", (data) => {
+    delete players[socket.id]
+    socket.broadcast.emit('players', players)
+  })
+
   socket.on("move", function(data) {
     let sendData = () => {
-      for (playerId of Object.keys(players)) {
-        let x = players[playerId].x
-        let y = players[playerId].y
+      // for (playerId of Object.keys(players)) {
+      //   let x = players[playerId].x
+      //   let y = players[playerId].y
 
-        socket.broadcast.emit("position", {
-          playerId: playerId,
-          x: x,
-          y: y
-        })
-        socket.emit("position", {
-          playerId: playerId,
-          x: x,
-          y: y
-        })
-      }
+      //   socket.broadcast.emit("position", {
+      //     playerId: playerId,
+      //     x: x,
+      //     y: y
+      //   })
+      //   socket.emit("position", {
+      //     playerId: playerId,
+      //     x: x,
+      //     y: y
+      //   })
+      // }
+      console.table(players)
+      socket.emit('players', players)
+      socket.broadcast.emit('players', players)
     }
 
     // socket.on('disconnect', function () {
@@ -83,4 +94,6 @@ io.on('connection', function (socket) {
     }
   })
 });
+
+
 

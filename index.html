@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,6 +12,24 @@
       height: 40px;
       background: #000;
       position: absolute;
+      border-radius: 50%;
+    }   
+    .player::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #000;
+      width: 50px;
+      height: 15px;
+      display: block;
+      color: red;
+      border-radius: 8px;
+      left: 30%;
+    }
+    #app {
+      width: 100vw;
+      height: 100vh;
     }
     * {
       margin: 0;
@@ -20,8 +39,12 @@
   <title>Agora vai!!!!</title>
 </head>
 <body>
-  <div id="app">
-    <player v-for="player in players" v-bind:key="player.id" v-bind:id="player.id"></player>
+  <div id="app" tabindex="0"
+    v-on:keydown.arrow-right="keydown('right')"
+    v-on:keydown.arrow-left="keydown('left')"
+    v-on:keydown.arrow-up="keydown('up')"
+    v-on:keydown.arrow-down="keydown('down')">
+    <player v-for="player in players" v-bind:key="player.id" v-bind:id="player.id" v-bind:style="{'background-color': `hsl(${player.color}, 100%, 50%)`, top: player.y + 'px', left: player.x + 'px'}"></player>
   </div>
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -31,16 +54,25 @@
 
     socket.on('players', (data) => {
      // console.log(data)
+      while (players.length) players.pop()
       Object.keys(data).map(id => {
         var player = {
           id: id,
+          color: data[id].color,
           x: data[id].x,
           y: data[id].y
         }
         players.push(player)
       })
-      
     })
+
+    // socket.on("position", data => {
+    //   const player = document.querySelector(`[data-id=${data.playerId}]`);
+    //   console.log(data);
+    //   player.style.top = `${data.y}px`
+    //   player.style.left = `${data.x}px`
+    //   console.log("daasdsad")
+    // })
 
 
     const Player = {
@@ -48,33 +80,15 @@
       template: `
         <div 
           tabindex="0" 
-          @keydown="move" 
           class="player"
           v-bind:data-id="id"
-          @keydown.arrow-right="move('right')"
-          @keydown.arrow-left="move('left')"
-          @keydown.arrow-up="move('up')"
-          @keydown.arrow-down="move('down')"
+
         ></div>`,
       props: ['id'],
       created () {
       },
       methods: {
-        move(direction) {
-          
-          // console.log(player)
-          socket.emit("move", direction);
-          socket.on("felinto", data => {
-            console.log(data)
-          })
-          socket.on("position", data => {
-            const player = document.querySelector(`[data-id=${data.playerId}]`);
-            console.log(data);
-            player.style.top = `${data.y}px`
-            player.style.left = `${data.x}px`
-            console.log("daasdsad")
-          })
-        }
+        
       },
       mounted () {
         
@@ -85,10 +99,29 @@
       el: "#app",
       data: {
         myId: 0,
-        players: players
+        players: players,
+        x: 0,
+        y: 0
       },
       mounted: function() {
-        // console.log(players)
+        addEventListener("mousemove", e => console.log(e.x, e.y))
+        addEventListener("click", bullet => console.log(bullet.x, bullet.y))
+        setInterval(() => {
+          
+          // this.calcMove() // calcula movimento x, y baseado nas teclas pressionadas
+          //this.keydown(x, y)
+        }, 20)
+      },
+      methods: {
+        keydown(direction) {
+          
+          // console.log(player)
+          socket.emit("move", direction);
+          socket.on("felinto", data => {
+            console.log(data)
+          })
+          
+        }
       },
       components: {
         Player
