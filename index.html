@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <style>
+    .player {
+      width: 40px;
+      height: 40px;
+      background: #000;
+      position: absolute;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <title>Agora vai!!!!</title>
+</head>
+<body>
+  <div id="app">
+    <player v-for="player in players" v-bind:key="player.id" v-bind:id="player.id"></player>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io.connect('http://localhost:8000');
+    console.log(socket)
+    var players = []
+
+    socket.on('players', (data) => {
+     // console.log(data)
+      Object.keys(data).map(id => {
+        var player = {
+          id: id,
+          x: data[id].x,
+          y: data[id].y
+        }
+        players.push(player)
+      })
+      
+    })
+
+
+    const Player = {
+      name: "Player",
+      template: `
+        <div 
+          tabindex="0" 
+          @keydown="move" 
+          class="player"
+          v-bind:data-id="id"
+          @keydown.arrow-right="move('right')"
+          @keydown.arrow-left="move('left')"
+          @keydown.arrow-up="move('up')"
+          @keydown.arrow-down="move('down')"
+        ></div>`,
+      props: ['id'],
+      created () {
+      },
+      methods: {
+        move(direction) {
+          
+          // console.log(player)
+          socket.emit("move", direction);
+          socket.on("felinto", data => {
+            console.log(data)
+          })
+          socket.on("position", data => {
+            const player = document.querySelector(`[data-id=${data.playerId}]`);
+            console.log(data);
+            player.style.top = `${data.y}px`
+            player.style.left = `${data.x}px`
+            console.log("daasdsad")
+          })
+        }
+      },
+      mounted () {
+        
+      },
+    }
+
+    const vm = new Vue({
+      el: "#app",
+      data: {
+        myId: 0,
+        players: players
+      },
+      mounted: function() {
+        // console.log(players)
+      },
+      components: {
+        Player
+      }
+    })
+  </script>
+</body>
+</html>
